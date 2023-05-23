@@ -1,4 +1,4 @@
-class MarkdownParser {
+export class MarkdownParser {
     parse(markdown: string): string {
         const lines = markdown.split('\n');
         let html = '';
