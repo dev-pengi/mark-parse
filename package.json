@@ -1,0 +1,48 @@
+{
+  "name": "mark-parse",
+  "version": "1.0.1",
+  "description": "parses Markdown syntax and converts it into HTML",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dev-pengi/mark-parse.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "build:watch": "tsc --watch"
+  },
+  "files": [
+    "lib/**/*"
+  ],
+  "keywords": [
+    "Markdown",
+    "Parser",
+    "Converter",
+    "HTML",
+    "Syntax",
+    "Markup",
+    "Formatting",
+    "Text",
+    "Documentation",
+    "Render",
+    "Transform",
+    "Compiler",
+    "Content",
+    "Publishing",
+    "text-to-HTML",
+    "Lightweight",
+    "Rich text",
+    "Formatting"
+  ],
+  "author": "pengi-dev",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "node-vibrant": "^3.2.1-alpha.1"
+  }
+}
