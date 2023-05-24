@@ -8,14 +8,18 @@ export class MarkdownParser {
         let listIndentLevel = 0;
 
         for (const line of lines) {
-            if (line.startsWith('#')) {
-                const level = Math.min(line.indexOf(' '), 6);
+            if (line.match(/^#{1,6}\s.+/)) {
+                const level = line.indexOf(' ');
 
                 if (level > 0) {
                     const headingText = line.slice(level + 1);
-                    html += `<h${level}>${this.formatInlineElements(headingText)}</h${level}>`;
+                    const headingLevel = Math.min(level, 6);
+                    html += `<h${headingLevel}>${this.formatInlineElements(headingText)}</h${headingLevel}>`;
+                    continue;
                 }
-            } else if (line.match(/^(\s*)([-*]+|\d+\.)\s(.+)/)) {
+            }
+
+            if (line.match(/^(\s*)([-*]+|\d+\.)\s(.+)/)) {
                 const [, indent, listMarker, listItemText] = line.match(/^(\s*)([-*]+|\d+\.)\s(.+)/) ?? [];
                 const indentLevel = indent?.length / 2 ?? 0;
 
@@ -32,7 +36,7 @@ export class MarkdownParser {
                         isInList = true;
                     }
 
-                    html += '<ul><li>' + this.formatInlineElements(listItemText);
+                    html += '<ul><li>' + this.formatInlineElements(listItemText) + '</li>';
                     listIndentLevel++;
                 } else if (indentLevel < listIndentLevel) {
                     html += '</li></ul>'.repeat(listIndentLevel - indentLevel) + `<li>${this.formatInlineElements(listItemText)}`;
@@ -50,17 +54,17 @@ export class MarkdownParser {
                 html += '<code>' + this.escapeHtml(line.slice(1));
             } else if (line.startsWith('---') || line.startsWith('***') || line.startsWith('___')) {
                 html += '<hr>';
-            } else if (line.startsWith('>')) {
+            } else if (line.startsWith('>') && line.match(/^>\s.+/)) {
                 if (!isInBlockQuote) {
                     html += '<blockquote>';
                     isInBlockQuote = true;
                 }
 
-                html += this.formatInlineElements(line.slice(1));
+                html += this.formatInlineElements(line.slice(1).trim());
                 html += '<br>';
             } else {
                 if (isInList) {
-                    html += '</ul>';
+                    html += '</ul>'.repeat(listIndentLevel + 1);
                     isInList = false;
                     listIndentLevel = 0;
                 }
