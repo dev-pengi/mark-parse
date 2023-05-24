@@ -1,13 +1,21 @@
 export class MarkdownParser {
     public parse(markdown: string): string {
-        const lines: string[] = markdown.split('\n');
-        let html = '';
-        let isInList = false;
-        let isInCodeBlock = false;
-        let isInBlockQuote = false;
-        let listIndentLevel = 0;
+        const lines: string[] = markdown.trim().split('\n');
+        let html: string = '';
+        let isInList: boolean = false;
+        let isInCodeBlock: boolean = false;
+        let isInBlockQuote: boolean = false;
+        let listIndentLevel: number = 0;
 
-        for (const line of lines) {
+        for (let i = 0; i < lines.length; i++) {
+            const line: string = lines[i];
+            let previousLine: string = lines[i - 1];
+
+            if (line.trim().length == 0) {
+                if (previousLine && previousLine != '<br>')
+                    html += '<br>'
+            }
+
             if (line.match(/^#{1,6}\s.+/)) {
                 const level = line.indexOf(' ');
 
@@ -54,14 +62,16 @@ export class MarkdownParser {
                 html += '<code>' + this.escapeHtml(line.slice(1));
             } else if (line.startsWith('---') || line.startsWith('***') || line.startsWith('___')) {
                 html += '<hr>';
-            } else if (line.startsWith('>') && line.match(/^>\s.+/)) {
+            } else if (line.startsWith('>')) {
                 if (!isInBlockQuote) {
                     html += '<blockquote>';
                     isInBlockQuote = true;
                 }
 
-                html += this.formatInlineElements(line.slice(1).trim());
-                html += '<br>';
+                html += this.formatInlineElements(line.slice(1).trim()) + ' ';
+            } else if (line.match(/^!\[.*?\]\(.*?\)/)) {
+                const [, altText, imageUrl] = line.match(/^!\[(.*?)\]\((.*?)\)/) ?? [];
+                html += `<img src="${imageUrl}" alt="${altText}">`;
             } else {
                 if (isInList) {
                     html += '</ul>'.repeat(listIndentLevel + 1);
@@ -72,12 +82,12 @@ export class MarkdownParser {
                 if (isInCodeBlock) {
                     html += this.escapeHtml(line) + '\n';
                 } else if (isInBlockQuote) {
-                    html += this.formatInlineElements(line);
-                    html += '<br>';
+                    html += this.formatInlineElements(line) + ' ';
                 } else if (line.trim().length > 0) {
-                    html += `<p>${this.formatInlineElements(line)}</p>`;
+                    html += this.formatInlineElements(line) + ' ';
                 }
             }
+
         }
 
         if (isInList) {
@@ -102,6 +112,7 @@ export class MarkdownParser {
         formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
         formattedText = formattedText.replace(/__(.*?)__/g, '<u>$1</u>');
         formattedText = formattedText.replace(/~~(.*?)~~/g, '<s>$1</s>');
+        formattedText = formattedText.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
 
         return formattedText;
     }
