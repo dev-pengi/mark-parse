@@ -9,12 +9,7 @@ export class MarkdownParser {
 
         for (let i = 0; i < lines.length; i++) {
             const line: string = lines[i];
-            let previousLine: string = lines[i - 1];
 
-            if (line.trim().length == 0) {
-                if (previousLine && previousLine != '<br>')
-                    html += '<br>'
-            }
 
             if (line.match(/^#{1,6}\s.+/)) {
                 const level = line.indexOf(' ');
@@ -88,6 +83,7 @@ export class MarkdownParser {
                 }
             }
 
+
         }
 
         if (isInList) {
@@ -104,6 +100,9 @@ export class MarkdownParser {
 
         return html;
     }
+
+
+
 
     private formatInlineElements(text: string): string {
         let formattedText = text;
@@ -127,3 +126,53 @@ export class MarkdownParser {
             .replace(/\n/g, '<br>');
     }
 }
+
+
+
+
+
+const markdownText = `
+# Heading 1
+
+This is a paragraph.
+
+## Heading 2
+
+- List item 1
+- List item 2
+- List item 3
+
+This is another paragraph.
+
+### Heading 3
+
+> Blockquote
+> 
+> This is a blockquote with multiple lines.
+
+#### Heading 4
+
+\`\`\`
+// Code block
+function greet(name) {
+    console.log('Hello, ' + name + '!');
+}
+\`\`\`
+
+##### Heading 5
+
+This is a paragraph with an inline \`code\` snippet.
+
+###### Heading 6
+
+This is a paragraph with **bold** and *italic* formatting.
+
+---
+
+![Image](https://example.com/image.jpg)
+
+`;
+
+const parser = new MarkdownParser();
+const htmlOutput = parser.parse(markdownText);
+console.log(htmlOutput);
