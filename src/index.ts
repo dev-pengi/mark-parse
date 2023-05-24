@@ -1,12 +1,11 @@
 export class MarkdownParser {
-    parse(markdown: string): string {
-        const lines = markdown.split('\n');
+    public parse(markdown: string): string {
+        const lines: string[] = markdown.split('\n');
         let html = '';
         let isInList = false;
-        let isInSublist = false;
         let isInCodeBlock = false;
-        let isInSingleLineCode = false;
         let isInBlockQuote = false;
+        let listIndentLevel = 0;
 
         for (const line of lines) {
             if (line.startsWith('#')) {
@@ -16,41 +15,29 @@ export class MarkdownParser {
                     const headingText = line.slice(level + 1);
                     html += `<h${level}>${this.formatInlineElements(headingText)}</h${level}>`;
                 }
-            } else if (line.startsWith('*') || line.startsWith('-')) {
-                const listMarker = line.startsWith('*') ? '*' : '-';
-                const listItemText = line.slice(1).trim();
+            } else if (line.match(/^(\s*)([-*]+|\d+\.)\s(.+)/)) {
+                const [, indent, listMarker, listItemText] = line.match(/^(\s*)([-*]+|\d+\.)\s(.+)/) ?? [];
+                const indentLevel = indent?.length / 2 ?? 0;
 
-                if (!isInList) {
-                    html += '<ul>';
-                    isInList = true;
+                if (indentLevel === listIndentLevel) {
+                    if (!isInList) {
+                        html += '<ul>';
+                        isInList = true;
+                    }
+
+                    html += `<li>${this.formatInlineElements(listItemText)}</li>`;
+                } else if (indentLevel > listIndentLevel) {
+                    if (!isInList) {
+                        html += '<ul>';
+                        isInList = true;
+                    }
+
+                    html += '<ul><li>' + this.formatInlineElements(listItemText);
+                    listIndentLevel++;
+                } else if (indentLevel < listIndentLevel) {
+                    html += '</li></ul>'.repeat(listIndentLevel - indentLevel) + `<li>${this.formatInlineElements(listItemText)}`;
+                    listIndentLevel = indentLevel;
                 }
-
-                if (!isInSublist && line.startsWith(' ')) {
-                    html += '<ul>';
-                    isInSublist = true;
-                } else if (!line.startsWith(' ') && isInSublist) {
-                    html += '</li></ul>';
-                    isInSublist = false;
-                }
-
-                html += `<li>${this.formatInlineElements(listItemText)}</li>`;
-            } else if (line.match(/^\d+\./)) {
-                const listItemText = line.replace(/^\d+\./, '').trim();
-
-                if (!isInList) {
-                    html += '<ol>';
-                    isInList = true;
-                }
-
-                if (!isInSublist && line.startsWith(' ')) {
-                    html += '<ol>';
-                    isInSublist = true;
-                } else if (!line.startsWith(' ') && isInSublist) {
-                    html += '</li></ol>';
-                    isInSublist = false;
-                }
-
-                html += `<li>${this.formatInlineElements(listItemText)}</li>`;
             } else if (line.startsWith('```')) {
                 if (isInCodeBlock) {
                     html += '</code></pre>';
@@ -60,14 +47,7 @@ export class MarkdownParser {
                     isInCodeBlock = true;
                 }
             } else if (line.startsWith('`')) {
-                if (isInSingleLineCode) {
-                    html += '</code>';
-                    isInSingleLineCode = false;
-                } else {
-                    html += '<code>';
-                    isInSingleLineCode = true;
-                }
-                html += this.escapeHtml(line.slice(1));
+                html += '<code>' + this.escapeHtml(line.slice(1));
             } else if (line.startsWith('---') || line.startsWith('***') || line.startsWith('___')) {
                 html += '<hr>';
             } else if (line.startsWith('>')) {
@@ -78,40 +58,26 @@ export class MarkdownParser {
 
                 html += this.formatInlineElements(line.slice(1));
                 html += '<br>';
-            } else if (line.trim().length === 0) {
-                // Ignore empty lines
-                continue;
             } else {
                 if (isInList) {
                     html += '</ul>';
                     isInList = false;
-                }
-
-                if (isInSublist) {
-                    html += '</li></ul>';
-                    isInSublist = false;
+                    listIndentLevel = 0;
                 }
 
                 if (isInCodeBlock) {
                     html += this.escapeHtml(line) + '\n';
-                } else if (isInSingleLineCode) {
-                    html += this.escapeHtml(line) + '</code>';
-                    isInSingleLineCode = false;
                 } else if (isInBlockQuote) {
                     html += this.formatInlineElements(line);
                     html += '<br>';
-                } else {
+                } else if (line.trim().length > 0) {
                     html += `<p>${this.formatInlineElements(line)}</p>`;
                 }
             }
         }
 
         if (isInList) {
-            html += '</ul>';
-        }
-
-        if (isInSublist) {
-            html += '</li></ul>';
+            html += '</ul>'.repeat(listIndentLevel);
         }
 
         if (isInCodeBlock) {
@@ -142,6 +108,7 @@ export class MarkdownParser {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+            .replace(/'/g, '&#039;')
+            .replace(/\n/g, '<br>');
     }
 }
