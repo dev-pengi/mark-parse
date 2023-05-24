@@ -1,3 +1,5 @@
+import prettier from 'prettier';
+
 export interface MarkdownParserOptions {
     parseList?: boolean;
     parseCodeBlock?: boolean;
@@ -11,6 +13,7 @@ export interface MarkdownParserOptions {
     parseStrikethrough?: boolean;
     parseLink?: boolean;
     parseImage?: boolean;
+    formatHTML?: boolean;
 }
 
 export class MarkdownParser {
@@ -30,6 +33,7 @@ export class MarkdownParser {
             parseStrikethrough: options.parseStrikethrough !== undefined ? options.parseStrikethrough : true,
             parseLink: options.parseLink !== undefined ? options.parseLink : true,
             parseImage: options.parseImage !== undefined ? options.parseImage : true,
+            formatHTML: options.formatHTML !== undefined ? options.formatHTML : true
         };
     }
 
@@ -128,7 +132,7 @@ export class MarkdownParser {
         if (isInBlockQuote) {
             html += '</blockquote>';
         }
-
+        if (this.options.formatHTML) html = prettier.format(html, { parser: 'html' });
         return html;
     }
 
