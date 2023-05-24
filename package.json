@@ -1,6 +1,6 @@
 {
   "name": "mark-parse",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "parses Markdown syntax and converts it into HTML",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -39,10 +39,11 @@
   "author": "pengi-dev",
   "license": "ISC",
   "devDependencies": {
+    "@types/prettier": "^2.7.2",
     "nodemon": "^2.0.22",
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "node-vibrant": "^3.2.1-alpha.1"
+    "prettier": "^2.8.8"
   }
 }
